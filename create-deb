@@ -1,0 +1,61 @@
+#!/bin/bash
+
+deb_dir=imx_usb_loader_arm64
+[ -d $deb_dir ] && rm -rf $deb_dir
+
+mkdir -p $deb_dir/DEBIAN $deb_dir/etc/imx_usb  $deb_dir/var/lib/imx_usb/firmware $deb_dir/etc/udev/rules.d
+
+cat > $deb_dir/DEBIAN/control << EOF1
+
+Package:  imx-usb-loader 
+Architecture: arm64
+Maintainer: @access
+Priority: optional
+Version: 1.00
+Description: imx_usb_loader for arm64 NUC
+EOF1
+
+
+cat > $deb_dir/DEBIAN/postrm << EOF4
+#!/bin/bash
+udevadm control --reload-rules
+exit 0
+EOF4
+
+cat > $deb_dir/DEBIAN/postinst << EOF3
+#!/bin/bash
+udevadm control --reload-rules
+exit 0
+EOF3
+
+
+
+chmod +x $deb_dir/DEBIAN/postinst
+chmod +x $deb_dir/DEBIAN/postrm
+
+cp -av imx_usb.conf $deb_dir/etc/imx_usb
+
+cat > $deb_dir/etc/imx_usb/mx6_usb_sdp_spl.conf <<EOF2
+
+mx6_spl_sdp
+#In SPL, we typically load u-boot.img which has a U-boot header...
+hid,uboot_header,1024,0x10000000,1G,0x00907000,0x31000
+/var/lib/imx_usb/firmware/u-boot.img:load 0x177fffc0, jump header
+EOF2
+
+cat > $deb_dir/etc/imx_usb/mx6_usb_work.conf <<EOF5
+mx6_qsb
+hid,1024,0x910000,0x10000000,1G,0x00900000,0x40000
+/var/lib/imx_usb/firmware/SPL:jump header
+
+EOF5
+
+
+cat >  $deb_dir/etc/udev/rules.d/90-imx6-dual.rules <<EOF6
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="15a2", ATTRS{idProduct}=="0054", RUN+="/usr/local/bin/imx_usb -c /etc/imx_usb"
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="0525", ATTRS{idProduct}=="b4a4", RUN+="/usr/local/bin/imx_usb -c /etc/imx_usb"
+EOF6
+fakeroot chown -R 0:0  $deb_dir
+fakeroot dpkg-deb --build -Zgzip $deb_dir
+
+exit 0
