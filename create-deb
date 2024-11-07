@@ -3,7 +3,7 @@
 deb_dir=imx_usb_loader_arm64
 [ -d $deb_dir ] && rm -rf $deb_dir
 
-mkdir -p $deb_dir/DEBIAN $deb_dir/etc/imx_usb  $deb_dir/var/lib/imx_usb/firmware $deb_dir/etc/udev/rules.d
+mkdir -p $deb_dir/DEBIAN $deb_dir/etc/imx_usb  $deb_dir/var/lib/imx_usb/firmware $deb_dir/etc/udev/rules.d $deb_dir/usr/local/bin
 
 cat > $deb_dir/DEBIAN/control << EOF1
 
@@ -34,6 +34,8 @@ chmod +x $deb_dir/DEBIAN/postinst
 chmod +x $deb_dir/DEBIAN/postrm
 
 cp -av imx_usb.conf $deb_dir/etc/imx_usb
+cp -av imx_usb $deb_dir/usr/local/bin/
+chmod +x $deb_dir/usr/local/bin/imx_usb
 
 cat > $deb_dir/etc/imx_usb/mx6_usb_sdp_spl.conf <<EOF2
 
